@@ -54,7 +54,7 @@ sudo docker run --name "${CONTAINER_NAME}" --gpus all -d \
 MAX_WAIT_SEC="${MAX_WAIT_SEC:-360}"
 INTERVAL_SEC=5
 MAX_ROUNDS=$((MAX_WAIT_SEC / INTERVAL_SEC))
-READY_MSG="${READY_MSG:-机械臂已加载|Kuka\+Allegro 已加载|双 Kuka\+Allegro 已加载|桌面张开姿态|双臂场景已加载|演示场景已加载}"
+READY_MSG="${READY_MSG:-机械臂已加载|Kuka\+Allegro 已加载|Allegro 灵巧手已加载|双 Kuka\+Allegro 已加载|桌面张开姿态|双臂场景已加载|演示场景已加载}"
 
 echo ">>> [4/4] 等待就绪（首次约 2-5 分钟，最长 ${MAX_WAIT_SEC} 秒）..."
 last_stage=""
@@ -115,6 +115,8 @@ for round in $(seq 1 "$MAX_ROUNDS"); do
     stage="双 Kuka+Allegro 已就绪"
   elif echo "$logs" | grep -q "Kuka+Allegro 已加载"; then
     stage="Kuka+Allegro 已就绪"
+  elif echo "$logs" | grep -q "Allegro 灵巧手已加载"; then
+    stage="Allegro 灵巧手已就绪"
   fi
   if echo "$logs" | grep -q "双臂场景已加载"; then
     stage="双臂场景已就绪"

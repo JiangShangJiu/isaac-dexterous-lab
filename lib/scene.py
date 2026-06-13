@@ -9,6 +9,8 @@ ROBOT_ASSETS = {
     "kuka_allegro": "/Isaac/IsaacLab/Robots/KukaAllegro/kuka.usd",
     # OpenArm 双臂（每侧 7 轴臂 + 夹爪）
     "openarm_bimanual": "/Isaac/Robots/OpenArm/openarm_bimanual/openarm_bimanual.usd",
+    # Wonik Allegro 灵巧手（16 DOF，无机械臂）
+    "allegro_hand": "/Isaac/Robots/WonikRobotics/AllegroHand/allegro_hand_instanceable.usd",
 }
 
 
@@ -40,6 +42,39 @@ def setup_camera(
     from isaacsim.core.utils.viewports import set_camera_view
 
     set_camera_view(eye=list(eye), target=list(target), camera_prim_path=camera_prim_path)
+
+
+def setup_scene_lighting(
+    dome_intensity: float = 1800.0,
+    key_intensity: float = 3500.0,
+    fill_intensity: float = 1500.0,
+    exposure: float = 1.25,
+):
+    """为场景添加环境光 + 主/补光，并提高曝光（RaytracedLighting 默认偏暗）。"""
+    from pxr import Gf, UsdGeom, UsdLux
+    import omni.usd
+
+    stage = omni.usd.get_context().get_stage()
+
+    def _distant(path: str, intensity: float, rot_deg: tuple[float, float, float], color: tuple[float, float, float]):
+        light = UsdLux.DistantLight.Define(stage, path)
+        light.CreateIntensityAttr(intensity)
+        light.CreateColorAttr(Gf.Vec3f(*color))
+        xform = UsdGeom.Xformable(light)
+        xform.AddRotateXYZOp().Set(Gf.Vec3f(*rot_deg))
+
+    dome = UsdLux.DomeLight.Define(stage, "/World/SceneDomeLight")
+    dome.CreateIntensityAttr(dome_intensity)
+    dome.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
+
+    _distant("/World/SceneKeyLight", key_intensity, (-50.0, 35.0, 0.0), (1.0, 0.98, 0.95))
+    _distant("/World/SceneFillLight", fill_intensity, (-25.0, -130.0, 0.0), (0.92, 0.96, 1.0))
+
+    import carb
+
+    settings = carb.settings.get_settings()
+    settings.set("/rtx/post/tonemap/exposure", exposure)
+    settings.set("/rtx/post/tonemap/autoExposure", False)
 
 
 def quat_yaw_deg(yaw_deg: float):

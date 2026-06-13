@@ -18,7 +18,7 @@ from isaacsim.core.utils.types import ArticulationAction
 from lib.kuka_allegro import configure_controller
 from lib.livestream import setup_livestream
 from lib.mcp import setup_mcp
-from lib.scene import create_world_with_ground, get_assets_root_or_exit, load_robot, setup_camera
+from lib.scene import create_world_with_ground, get_assets_root_or_exit, load_robot, setup_camera, setup_scene_lighting
 from lib.ui import setup_ui_scale
 
 setup_ui_scale(simulation_app)
@@ -27,6 +27,7 @@ setup_mcp(simulation_app)
 assets_root = get_assets_root_or_exit(simulation_app)
 
 world = create_world_with_ground()
+setup_scene_lighting()
 setup_camera(eye=(1.8, 1.8, 1.4), target=(0.15, 0.0, 0.85))
 
 robot = load_robot(world, "kuka_allegro", "/World/KukaAllegro", assets_root)
