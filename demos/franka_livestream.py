@@ -1,0 +1,41 @@
+"""Franka 机械臂 + WebRTC 推流演示（默认入口）。"""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from isaacsim import SimulationApp
+
+from lib.config import DEFAULT_SIM_CONFIG
+
+simulation_app = SimulationApp(launch_config=DEFAULT_SIM_CONFIG)
+
+import numpy as np
+from isaacsim.core.utils.types import ArticulationAction
+
+from lib.livestream import setup_livestream
+from lib.scene import create_world_with_ground, get_assets_root_or_exit, load_robot, setup_camera
+from lib.ui import setup_ui_scale
+
+setup_ui_scale(simulation_app)
+setup_livestream(simulation_app)
+assets_root = get_assets_root_or_exit(simulation_app)
+
+world = create_world_with_ground()
+setup_camera()
+franka = load_robot(world, "franka", "/World/Franka", assets_root)
+
+print("Franka 机械臂已加载，开始仿真...", flush=True)
+
+POSE_A = np.array([0.0, -0.5, 0.0, -2.0, 0.0, 1.5, 0.8, 0.04, 0.04])
+POSE_B = np.array([0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.5, 0.04, 0.04])
+
+step = 0
+while simulation_app._app.is_running() and not simulation_app.is_exiting():
+    pose = POSE_A if step % 300 < 150 else POSE_B
+    franka.get_articulation_controller().apply_action(ArticulationAction(joint_positions=pose))
+    world.step(render=True)
+    step += 1
+
+simulation_app.close()
