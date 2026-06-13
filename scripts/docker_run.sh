@@ -19,12 +19,15 @@ if [[ ! -f "${ROOT_DIR}/${ENTRY_SCRIPT}" ]]; then
 fi
 
 echo ">>> 入口脚本: ${ENTRY_SCRIPT}"
-echo ">>> [1/3] 停止旧容器..."
+echo ">>> [1/4] 停止旧 MCP Server..."
+"${ROOT_DIR}/scripts/run_mcp_server.sh" --stop 2>/dev/null || true
+
+echo ">>> [2/4] 停止旧容器..."
 sudo docker compose -f /home/ubuntu/docker-compose.yml down 2>/dev/null || true
 # 清理所有 isaac-sim 相关容器，避免多个实例抢 GPU
 sudo docker ps -aq --filter "name=isaac-sim" | xargs -r sudo docker rm -f 2>/dev/null || true
 
-echo ">>> [2/3] 启动新容器..."
+echo ">>> [3/4] 启动新容器..."
 sudo docker run --name "${CONTAINER_NAME}" --gpus all -d \
   --entrypoint bash \
   --network=host \
@@ -32,6 +35,8 @@ sudo docker run --name "${CONTAINER_NAME}" --gpus all -d \
   -e "PRIVACY_CONSENT=Y" \
   -e "PYTHONUNBUFFERED=1" \
   -e "UI_DPI_SCALE=${UI_DPI_SCALE:-1.8}" \
+  -e "ISAAC_MCP_PORT=${ISAAC_MCP_PORT:-8766}" \
+  -e "MCP_EXT_FOLDER=/workspace/mcp/isaacsim-mcp-server" \
   -e "PUBLIC_IP=${PUBLIC_IP}" \
   -v /home/ubuntu/docker/isaac-sim/cache/main:/isaac-sim/.cache \
   -v /home/ubuntu/docker/isaac-sim/cache/computecache:/isaac-sim/.nv/ComputeCache \
@@ -49,7 +54,7 @@ INTERVAL_SEC=5
 MAX_ROUNDS=$((MAX_WAIT_SEC / INTERVAL_SEC))
 READY_MSG="${READY_MSG:-机械臂已加载|演示场景已加载}"
 
-echo ">>> [3/3] 等待就绪（首次约 2-5 分钟，最长 ${MAX_WAIT_SEC} 秒）..."
+echo ">>> [4/4] 等待就绪（首次约 2-5 分钟，最长 ${MAX_WAIT_SEC} 秒）..."
 last_stage=""
 for round in $(seq 1 "$MAX_ROUNDS"); do
   if ! sudo docker ps --filter "name=${CONTAINER_NAME}" --format '{{.Names}}' | grep -q "${CONTAINER_NAME}"; then
@@ -63,9 +68,19 @@ for round in $(seq 1 "$MAX_ROUNDS"); do
 
   if echo "$logs" | grep -qE "${READY_MSG}"; then
     echo ""
-    echo "✅ 启动完成！"
+    echo "✅ Isaac Sim 启动完成！"
     echo "   WebRTC 连接: ${PUBLIC_IP}"
     echo "   查看日志: sudo docker logs -f ${CONTAINER_NAME}"
+    if [[ -x "${ROOT_DIR}/mcp/.venv/bin/isaacsim-mcp-server" ]]; then
+      echo ""
+      echo ">>> 启动 MCP Server..."
+      if "${ROOT_DIR}/scripts/run_mcp_server.sh" --daemon; then
+        echo "   Cursor: Settings → MCP → isaac-sim（连 http://127.0.0.1:8767/sse）"
+      fi
+    else
+      echo ""
+      echo "   MCP 未安装，运行 ./scripts/setup_mcp.sh 后可随 restart 自动拉起"
+    fi
     exit 0
   fi
 

@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+mcp/.venv/
+mcp/.mcp-server.pid
+mcp/mcp-server.log
+
+# MCP 扩展仓库（运行 setup_mcp.sh 克隆，可不提交）
+mcp/isaacsim-mcp-server/
 
 # IDE
 .idea/

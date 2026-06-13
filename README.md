@@ -13,12 +13,20 @@ code/
 │   ├── config.py          # 启动配置、UI 缩放默认值
 │   ├── livestream.py      # WebRTC 推流
 │   ├── scene.py           # 场景、相机、机器人
-│   └── ui.py              # 界面缩放
+│   ├── ui.py              # 界面缩放
+│   └── mcp.py             # MCP Extension
 ├── demos/                 # 仿真入口脚本（每个文件可独立运行）
 │   ├── franka_livestream.py   # 默认：Franka 机械臂演示
 │   └── _template.py           # 新脚本模板
+├── mcp/                       # MCP（setup_mcp.sh 安装）
+│   ├── .venv/                 # MCP Server Python 环境
+│   └── isaacsim-mcp-server/   # Omniverse Extension 源码
+├── .cursor/
+│   └── mcp.json               # Cursor MCP 配置
 └── scripts/
-    └── docker_run.sh      # Docker 启动逻辑
+    ├── docker_run.sh          # Docker 启动逻辑
+    ├── run_mcp_server.sh      # MCP Server
+    └── setup_mcp.sh           # MCP 安装
 ```
 
 容器内路径：`/workspace/` ↔ 宿主机 `/home/ubuntu/code/`
@@ -70,6 +78,56 @@ UI_DPI_SCALE=1.0 ./restart.sh franka   # 恢复默认大小
 
 也可直接改 `lib/config.py` 里的 `UI_DPI_SCALE` 默认值。
 
+## MCP（Cursor 控制 Isaac Sim）
+
+通过 [isaacsim-mcp-server](https://github.com/whats2000/isaacsim-mcp-server) 让 Cursor 用自然语言控制仿真（加载机器人、建场景、步进调试等）。
+
+### 架构
+
+```
+Cursor  ←SSE 8767→  MCP Server（宿主机，restart.sh 自动后台拉起）
+                    ↓ TCP 8766
+               Docker 内 Isaac MCP Extension
+```
+
+### 首次安装
+
+```bash
+./scripts/setup_mcp.sh
+```
+
+### 日常使用（一个命令）
+
+```bash
+./restart.sh franka   # Isaac Sim + MCP Extension + MCP Server 一起就绪
+```
+
+然后在 Cursor **Settings → MCP** 启用 `isaac-sim`（`.cursor/mcp.json` 已配置 `http://127.0.0.1:8767/sse`）。
+
+手动管理 MCP Server：
+
+```bash
+./scripts/run_mcp_server.sh --status
+./scripts/run_mcp_server.sh --stop
+./scripts/run_mcp_server.sh --daemon   # 单独拉起 SSE 后台
+```
+
+### Cursor 配置
+
+项目已包含 `.cursor/mcp.json`。**Remote SSH 连到本云服务器**时，在 Cursor Settings → MCP 中应能看到 `isaac-sim`。
+
+若 Cursor 在**本地电脑**、Isaac Sim 在云上，需 SSH 隧道（转发 MCP SSE 端口）：
+
+```bash
+ssh -L 8767:127.0.0.1:8767 ubuntu@117.50.175.186
+```
+
+然后在本地 Cursor 配置 MCP 连 `http://127.0.0.1:8767/sse`。
+
+### 验证
+
+在 Cursor 里让 AI 调用 `get_scene_info` 检查连接是否正常。
+
 ### 脚本结构约定
 
 每个 `demos/*.py` 遵循固定顺序：
@@ -95,7 +153,7 @@ while simulation_app._app.is_running():  # ⑤ 仿真循环
 | `lib/config.py` | 启动分辨率、`UI_DPI_SCALE` 默认值 |
 | `lib/livestream.py` | `setup_livestream()` WebRTC 推流 |
 | `lib/scene.py` | `create_world_with_ground()`、`load_robot()` 等 |
-| `lib/ui.py` | `setup_ui_scale()` 界面字体/菜单缩放 |
+| `lib/mcp.py` | `setup_mcp()` 启用 MCP Extension |
 
 `load_robot()` 内置机器人：`franka`、`ur10`，可在 `lib/scene.py` 的 `ROBOT_ASSETS` 里扩展。
 

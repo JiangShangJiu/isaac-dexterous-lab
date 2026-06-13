@@ -13,16 +13,18 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from isaacsim import SimulationApp
 
-from lib.config import DEFAULT_SIM_CONFIG
+from lib.config import get_sim_config
 
-simulation_app = SimulationApp(launch_config=DEFAULT_SIM_CONFIG)
+simulation_app = SimulationApp(launch_config=get_sim_config())
 
 from lib.livestream import setup_livestream
+from lib.mcp import setup_mcp
 from lib.scene import create_world_with_ground, get_assets_root_or_exit, setup_camera
 from lib.ui import setup_ui_scale
 
 setup_ui_scale(simulation_app)
 setup_livestream(simulation_app)
+setup_mcp(simulation_app)
 get_assets_root_or_exit(simulation_app)
 
 world = create_world_with_ground()
