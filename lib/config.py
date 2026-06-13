@@ -31,7 +31,20 @@ def _build_extra_args() -> list[str]:
     return args
 
 
-def get_sim_config() -> dict:
+def get_sim_config(profile: str = "default") -> dict:
+    """profile: default | dual_arm（双 Kuka+Allegro 等重场景，降分辨率减显存）"""
+    if profile == "dual_arm":
+        return {
+            "width": 1280,
+            "height": 720,
+            "window_width": 1600,
+            "window_height": 900,
+            "headless": True,
+            "hide_ui": False,
+            "renderer": "RaytracedLighting",
+            "display_options": 3286,
+            "extra_args": _build_extra_args(),
+        }
     return {
         "width": 1920,
         "height": 1080,

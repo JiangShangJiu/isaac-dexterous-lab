@@ -26,6 +26,8 @@ echo ">>> [2/4] 停止旧容器..."
 sudo docker compose -f /home/ubuntu/docker-compose.yml down 2>/dev/null || true
 # 清理所有 isaac-sim 相关容器，避免多个实例抢 GPU
 sudo docker ps -aq --filter "name=isaac-sim" | xargs -r sudo docker rm -f 2>/dev/null || true
+# 等待 GPU / WebRTC 端口释放，避免快速重启时显存与端口冲突
+sleep 5
 
 echo ">>> [3/4] 启动新容器..."
 sudo docker run --name "${CONTAINER_NAME}" --gpus all -d \
@@ -52,7 +54,7 @@ sudo docker run --name "${CONTAINER_NAME}" --gpus all -d \
 MAX_WAIT_SEC="${MAX_WAIT_SEC:-360}"
 INTERVAL_SEC=5
 MAX_ROUNDS=$((MAX_WAIT_SEC / INTERVAL_SEC))
-READY_MSG="${READY_MSG:-机械臂已加载|演示场景已加载}"
+READY_MSG="${READY_MSG:-机械臂已加载|Kuka\+Allegro 已加载|双 Kuka\+Allegro 已加载|桌面张开姿态|双臂场景已加载|演示场景已加载}"
 
 echo ">>> [4/4] 等待就绪（首次约 2-5 分钟，最长 ${MAX_WAIT_SEC} 秒）..."
 last_stage=""
@@ -84,7 +86,12 @@ for round in $(seq 1 "$MAX_ROUNDS"); do
     exit 0
   fi
 
-  if echo "$logs" | grep -qiE "traceback|module not found|there was an error running python|could not find isaac sim assets|找不到 Isaac Sim 资产"; then
+  if echo "$logs" | grep -qiE "traceback|module not found|there was an error running python|could not find isaac sim assets|找不到 Isaac Sim 资产|segmentation fault|error_out_of_host_memory|net stream creation failed"; then
+    echo ""
+    if echo "$logs" | grep -qiE "error_out_of_host_memory|segmentation fault"; then
+      echo "❌ GPU 显存/图形资源不足或重启过快。请等 10 秒后重试: ./restart.sh ${ENTRY_SCRIPT#demos/}"
+      echo "   双 Kuka 场景已自动使用较低分辨率；若仍失败，可先 ./restart.sh kuka_allegro 单臂验证。"
+    fi
     echo ""
     echo "❌ 启动失败，最近日志："
     echo "$logs" | tail -20
@@ -103,6 +110,14 @@ for round in $(seq 1 "$MAX_ROUNDS"); do
   fi
   if echo "$logs" | grep -q "Franka 机械臂已加载"; then
     stage="机械臂已就绪"
+  fi
+  if echo "$logs" | grep -q "双 Kuka+Allegro 已加载"; then
+    stage="双 Kuka+Allegro 已就绪"
+  elif echo "$logs" | grep -q "Kuka+Allegro 已加载"; then
+    stage="Kuka+Allegro 已就绪"
+  fi
+  if echo "$logs" | grep -q "双臂场景已加载"; then
+    stage="双臂场景已就绪"
   fi
 
   elapsed=$((round * INTERVAL_SEC))
