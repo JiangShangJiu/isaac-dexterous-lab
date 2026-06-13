@@ -1,6 +1,9 @@
 """场景搭建：地面、相机、机器人（须在 SimulationApp 启动后 import/调用）。"""
 
+import os
 import sys
+
+_CODE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 ROBOT_ASSETS = {
     "franka": "/Isaac/Robots/FrankaRobotics/FrankaPanda/franka.usd",
@@ -11,7 +14,27 @@ ROBOT_ASSETS = {
     "openarm_bimanual": "/Isaac/Robots/OpenArm/openarm_bimanual/openarm_bimanual.usd",
     # Wonik Allegro 灵巧手（16 DOF，无机械臂）
     "allegro_hand": "/Isaac/Robots/WonikRobotics/AllegroHand/allegro_hand_instanceable.usd",
+    # Shadow Robot Shadow Hand（24 DOF articulation，20 驱动关节）
+    "shadow_hand": "/Isaac/Robots/ShadowRobot/ShadowHand/shadow_hand_instanceable.usd",
+    # Wuji Hand 2（本地 assets/wuji-description，运行 scripts/setup_wuji_hand2.sh 获取）
+    "wuji_hand2_right": "assets/wuji-description/hand2/body/usd/right/wujihand.usd",
+    "wuji_hand2_left": "assets/wuji-description/hand2/body/usd/left/wujihand.usd",
 }
+
+
+def resolve_robot_usd_path(robot_name: str, assets_root: str) -> str:
+    rel_path = ROBOT_ASSETS.get(robot_name)
+    if rel_path is None:
+        raise ValueError(f"未知机器人: {robot_name}，可选: {list(ROBOT_ASSETS)}")
+    if rel_path.startswith("/Isaac/"):
+        return assets_root + rel_path
+    local_path = os.path.join(_CODE_ROOT, rel_path)
+    if not os.path.isfile(local_path):
+        raise FileNotFoundError(
+            f"本地机器人资产不存在: {local_path}\n"
+            f"请运行: ./scripts/setup_wuji_hand2.sh"
+        )
+    return local_path
 
 
 def get_assets_root_or_exit(simulation_app):
@@ -105,7 +128,8 @@ def load_robot(
         raise ValueError(f"未知机器人: {robot_name}，可选: {list(ROBOT_ASSETS)}")
 
     unique_name = scene_name or prim_path.rstrip("/").split("/")[-1]
-    add_reference_to_stage(usd_path=assets_root + rel_path, prim_path=prim_path)
+    usd_path = resolve_robot_usd_path(robot_name, assets_root)
+    add_reference_to_stage(usd_path=usd_path, prim_path=prim_path)
     robot = world.scene.add(Robot(prim_path=prim_path, name=unique_name))
     if reset:
         world.reset()

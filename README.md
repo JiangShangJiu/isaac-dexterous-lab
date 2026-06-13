@@ -49,6 +49,8 @@ code/
 | `./restart.sh franka` | Franka 机械臂（默认） |
 | `./restart.sh kuka_allegro` | Kuka iiwa7 + Allegro 灵巧手（单臂） |
 | `./restart.sh allegro_hand` | Allegro 灵巧手（仅 hand）+ 桌子 + 方块 |
+| `./restart.sh shadow_hand` | Shadow Hand + 桌子 + 方块 |
+| `./restart.sh wuji_hand2` | Wuji Hand 2 + 桌子 + 方块（需先 `./scripts/setup_wuji_hand2.sh`） |
 | `./restart.sh dual_kuka_allegro` | 双 Kuka+Allegro + 桌子 + 方块 |
 | `./restart.sh bimanual` | OpenArm 双臂 + 桌子 + 方块 |
 | `./restart.sh list` | 列出所有可用场景 |
