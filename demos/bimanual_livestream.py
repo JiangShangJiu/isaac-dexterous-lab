@@ -7,29 +7,23 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from isaacsim import SimulationApp
 
-from lib.config import get_sim_config
+from lib.sim.config import get_sim_config
 
 simulation_app = SimulationApp(launch_config=get_sim_config())
 
 import numpy as np
 from isaacsim.core.utils.types import ArticulationAction
 
-from lib.livestream import setup_livestream
-from lib.mcp import setup_mcp
-from lib.scene import (
+from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.scene import (
     add_demo_cube,
     add_work_table,
     create_world_with_ground,
-    get_assets_root_or_exit,
     load_robot,
     setup_camera,
 )
-from lib.ui import setup_ui_scale
 
-setup_ui_scale(simulation_app)
-setup_livestream(simulation_app)
-setup_mcp(simulation_app)
-assets_root = get_assets_root_or_exit(simulation_app)
+assets_root = setup_streaming_app(simulation_app)
 
 world = create_world_with_ground()
 setup_camera(eye=(1.6, 1.9, 1.35), target=(0.55, 0.0, 0.82))

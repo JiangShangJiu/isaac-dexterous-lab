@@ -4,6 +4,11 @@
   1. cp demos/_template.py demos/my_demo.py
   2. 编辑 my_demo.py
   3. ./restart.sh my_demo
+
+推荐结构:
+  - lib/sim/       启动仿真、加载原语
+  - lib/scenes/    场景配方（可选，复杂布局放这里）
+  - lib/control/   控制算法
 """
 
 import os
@@ -13,26 +18,18 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from isaacsim import SimulationApp
 
-from lib.config import get_sim_config
+from lib.sim.config import get_sim_config
 
 simulation_app = SimulationApp(launch_config=get_sim_config())
 
-from lib.livestream import setup_livestream
-from lib.mcp import setup_mcp
-from lib.scene import create_world_with_ground, get_assets_root_or_exit, setup_camera
-from lib.ui import setup_ui_scale
+from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.scene import create_world_with_ground, setup_camera
 
-setup_ui_scale(simulation_app)
-setup_livestream(simulation_app)
-setup_mcp(simulation_app)
-get_assets_root_or_exit(simulation_app)
-
+assets_root = setup_streaming_app(simulation_app)
 world = create_world_with_ground()
 setup_camera()
 
-# TODO: 在这里添加你的机器人、物体、传感器等
-# assets_root = get_assets_root_or_exit(simulation_app)
-# robot = load_robot(world, "franka", "/World/Franka", assets_root)
+# TODO: lib.scenes.<name>.build(world, assets_root) 或 load_robot(...)
 
 print("演示场景已加载，开始仿真...", flush=True)
 

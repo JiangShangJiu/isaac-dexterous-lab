@@ -2,7 +2,7 @@
 
 import os
 
-_CODE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_CODE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MCP_EXT_FOLDER = os.environ.get(
     "MCP_EXT_FOLDER",
     os.path.join(_CODE_ROOT, "mcp", "isaacsim-mcp-server"),

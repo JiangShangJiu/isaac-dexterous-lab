@@ -2,7 +2,7 @@
 
 import os
 
-from lib.config import ISAAC_MCP_PORT, MCP_EXT_FOLDER
+from lib.sim.config import ISAAC_MCP_PORT, MCP_EXT_FOLDER
 
 
 def setup_mcp(simulation_app) -> bool:

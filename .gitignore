@@ -13,9 +13,22 @@ mcp/isaacsim-mcp-server/
 # 第三方机器人资产（运行 setup_wuji_hand2.sh 克隆，可不提交）
 assets/wuji-description/
 
+# 运行日志（Isaac/colcon 等本地生成）
+log/
+*.log
+
+# 环境变量 / 密钥
+.env
+.env.*
+.env.local
+
+# 论文 PDF（体积大且有版权，本地阅读即可；链接见 doc/README.md）
+doc/*.pdf
+
 # IDE
 .idea/
 .vscode/
 
-# 本地配置（如有）
-.env.local
+# OS
+.DS_Store
+Thumbs.db

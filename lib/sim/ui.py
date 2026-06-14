@@ -1,6 +1,6 @@
 """界面缩放（须在 SimulationApp 启动后调用，用于运行时二次调整）。"""
 
-from lib.config import UI_DPI_SCALE
+from lib.sim.config import UI_DPI_SCALE
 
 
 def setup_ui_scale(simulation_app, scale: float | None = None) -> float:

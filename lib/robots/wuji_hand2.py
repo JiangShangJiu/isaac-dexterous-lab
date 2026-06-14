@@ -57,7 +57,7 @@ def _prefix(side: str) -> str:
 
 
 def open_joints(side: str = "right") -> dict:
-  # 参考 wuji isaaclab-sim 默认微曲姿态
+    # 参考 wuji isaaclab-sim 默认微曲姿态
     prefix = _prefix(side)
     joints = {f"{prefix}_{suffix}": 0.0 for suffix in _REVOLUTE_SUFFIXES}
     for suffix in _FLEX_SUFFIXES:

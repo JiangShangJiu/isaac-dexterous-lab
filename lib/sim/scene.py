@@ -1,9 +1,9 @@
-"""场景搭建：地面、相机、机器人（须在 SimulationApp 启动后 import/调用）。"""
+"""仿真原语：加载机器人、地面、相机、桌子等（不含完整场景配方，见 lib.scenes）。"""
 
 import os
 import sys
 
-_CODE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_CODE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 ROBOT_ASSETS = {
     "franka": "/Isaac/Robots/FrankaRobotics/FrankaPanda/franka.usd",

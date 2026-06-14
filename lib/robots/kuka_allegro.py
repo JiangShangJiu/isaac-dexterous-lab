@@ -1,6 +1,11 @@
-"""Kuka iiwa7 + Allegro 灵巧手：姿态与控制器配置（须在 SimulationApp 启动后 import）。"""
+"""Kuka iiwa7 + Allegro 灵巧手：关节配置与预设姿态。"""
 
 import numpy as np
+
+ROBOT_KEY = "kuka_allegro"
+ARM_JOINT_PREFIX = "iiwa7_"
+NUM_ARM_DOFS = 7
+NUM_HAND_DOFS = 16
 
 # 参考 Isaac Lab KUKA_ALLEGRO_CFG
 OPEN_JOINTS = {
@@ -70,11 +75,17 @@ def make_table_open_pose(joint_names: list[str], side: str = "left") -> np.ndarr
     return pose_from_map(joint_names, table_open_joints(side))
 
 
+def split_arm_hand_indices(joint_names: list[str]) -> tuple[list[int], list[int]]:
+    arm_idx = [i for i, name in enumerate(joint_names) if name.startswith(ARM_JOINT_PREFIX)]
+    hand_idx = [i for i, name in enumerate(joint_names) if not name.startswith(ARM_JOINT_PREFIX)]
+    return arm_idx, hand_idx
+
+
 def configure_controller_gains(robot, arm_kp=120.0, arm_kd=12.0, hand_kp=8.0, hand_kd=0.5) -> None:
     joint_names = list(robot.dof_names)
     kps, kds = [], []
     for name in joint_names:
-        if name.startswith("iiwa7_"):
+        if name.startswith(ARM_JOINT_PREFIX):
             kps.append(arm_kp)
             kds.append(arm_kd)
         else:
@@ -84,6 +95,7 @@ def configure_controller_gains(robot, arm_kp=120.0, arm_kd=12.0, hand_kp=8.0, ha
 
 
 def configure_controller(robot, arm_kp=120.0, arm_kd=12.0, hand_kp=8.0, hand_kd=0.5) -> tuple[np.ndarray, np.ndarray]:
+    """兼容旧 demo：设置增益并返回 (open_pose, grasp_pose)。"""
     joint_names = list(robot.dof_names)
     configure_controller_gains(robot, arm_kp, arm_kd, hand_kp, hand_kd)
     return make_poses(joint_names)
