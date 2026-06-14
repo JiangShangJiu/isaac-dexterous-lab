@@ -15,6 +15,7 @@ import numpy as np
 from isaacsim.core.utils.types import ArticulationAction
 
 from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.loop import ensure_timeline_playing, simulation_tick
 from lib.sim.scene import (
     add_demo_cube,
     add_work_table,
@@ -77,11 +78,12 @@ controller.set_gains(kps=kps, kds=kds)
 
 print("双臂场景已加载，开始仿真...", flush=True)
 
+ensure_timeline_playing()
 step = 0
 while simulation_app._app.is_running() and not simulation_app.is_exiting():
     pose = POSE_A if step % 400 < 200 else POSE_B
     controller.apply_action(ArticulationAction(joint_positions=pose))
-    world.step(render=True)
-    step += 1
+    if simulation_tick(world, simulation_app):
+        step += 1
 
 simulation_app.close()

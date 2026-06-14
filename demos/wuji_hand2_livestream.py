@@ -19,6 +19,7 @@ from isaacsim.core.utils.types import ArticulationAction
 
 from lib.robots.wuji_hand2 import configure_controller
 from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.loop import ensure_timeline_playing, simulation_tick
 from lib.sim.scene import (
     add_demo_cube,
     add_work_table,
@@ -74,13 +75,14 @@ pose_open, pose_grasp = configure_controller(hand, side=SIDE)
 print(f"Wuji Hand 2 ({SIDE}) 关节数: {len(hand.dof_names)}, 名称: {list(hand.dof_names)}", flush=True)
 print("Wuji Hand 2 已加载，开始仿真...", flush=True)
 
+ensure_timeline_playing()
 controller = hand.get_articulation_controller()
 
 step = 0
 while simulation_app._app.is_running() and not simulation_app.is_exiting():
     pose = pose_open if step % 400 < 200 else pose_grasp
     controller.apply_action(ArticulationAction(joint_positions=pose))
-    world.step(render=True)
-    step += 1
+    if simulation_tick(world, simulation_app):
+        step += 1
 
 simulation_app.close()

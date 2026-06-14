@@ -15,6 +15,7 @@ import numpy as np
 from isaacsim.core.utils.types import ArticulationAction
 
 from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.loop import ensure_timeline_playing, simulation_tick
 from lib.sim.scene import create_world_with_ground, load_robot, setup_camera
 
 assets_root = setup_streaming_app(simulation_app)
@@ -29,10 +30,11 @@ POSE_A = np.array([0.0, -0.5, 0.0, -2.0, 0.0, 1.5, 0.8, 0.04, 0.04])
 POSE_B = np.array([0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.5, 0.04, 0.04])
 
 step = 0
+ensure_timeline_playing()
 while simulation_app._app.is_running() and not simulation_app.is_exiting():
     pose = POSE_A if step % 300 < 150 else POSE_B
     franka.get_articulation_controller().apply_action(ArticulationAction(joint_positions=pose))
-    world.step(render=True)
-    step += 1
+    if simulation_tick(world, simulation_app):
+        step += 1
 
 simulation_app.close()

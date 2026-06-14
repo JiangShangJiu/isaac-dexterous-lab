@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from isaacsim.core.utils.types import ArticulationAction
 
-from lib.control.base import ControlObservation, Controller
+from lib.sim.loop import ensure_timeline_playing, simulation_tick
 
 
 def read_observation(robot, step: int, sim_time: float) -> ControlObservation:
@@ -41,10 +41,11 @@ def run_control_loop(
 ) -> None:
     """标准控制主循环；算法逻辑全部在 controller 内。"""
     controller.reset(robot)
+    ensure_timeline_playing()
     step = 0
     while simulation_app._app.is_running() and not simulation_app.is_exiting():
         obs = read_observation(robot, step, step * sim_dt)
         command = controller.step(obs)
         apply_joint_command(robot, command)
-        world.step(render=render)
-        step += 1
+        if simulation_tick(world, simulation_app, render=render):
+            step += 1

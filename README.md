@@ -29,7 +29,7 @@ code/
     └── setup_mcp.sh           # MCP 安装
 ```
 
-容器内路径：`/workspace/` ↔ 宿主机 `/home/ubuntu/code/`
+容器内路径：`/workspace/` ↔ 宿主机 `/home/ubuntu/isaac-dexterous-lab/`
 
 ## 日常开发流程
 

@@ -23,6 +23,7 @@ from lib.sim.config import get_sim_config
 simulation_app = SimulationApp(launch_config=get_sim_config())
 
 from lib.sim.bootstrap import setup_streaming_app
+from lib.sim.loop import ensure_timeline_playing, simulation_tick
 from lib.sim.scene import create_world_with_ground, setup_camera
 
 assets_root = setup_streaming_app(simulation_app)
@@ -33,7 +34,8 @@ setup_camera()
 
 print("演示场景已加载，开始仿真...", flush=True)
 
+ensure_timeline_playing()
 while simulation_app._app.is_running() and not simulation_app.is_exiting():
-    world.step(render=True)
+    simulation_tick(world, simulation_app)
 
 simulation_app.close()
